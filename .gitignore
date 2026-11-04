@@ -1,0 +1,8 @@
+# Compiled firmware and test binaries, recreated by ./prog.sh build and tests/run.sh
+build/
+
+# Firmware read from the original chip. Keep a safe copy of this outside the repo.
+backup/
+
+# macOS
+.DS_Store
