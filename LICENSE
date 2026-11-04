@@ -1,0 +1,16 @@
+This repository contains a modified version of the Kastle ARP firmware by Bastl Instruments.
+
+Original work: kastleArp.ino, written by Vaclav Pelousek, Bastl Instruments
+http://www.bastl-instruments.com
+https://github.com/bastl-instruments/kastle
+Commit 6cb8ba3122fd91c07df9cee316945b4cf80c09f4
+
+Bastl Instruments releases this work as "open source CC-BY-SA" (Creative Commons
+Attribution-ShareAlike) and does not name a licence version.
+
+Modifications: kastl-arb.ino changes the original to play maqams with quarter tones.
+Modifications copyright 2026 Omar Sabry, released under the same licence.
+
+The original is kept unmodified in stock/kastleArp.ino. Credits are kept in the source files.
+
+Licence terms: https://creativecommons.org/licenses/by-sa/4.0/
