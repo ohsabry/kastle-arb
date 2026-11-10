@@ -17,20 +17,20 @@ The root is C unless you change it in boot mode. The CHORD patch point picks the
 
 | CHORD | Maqam | Notes | Drone |
 | --- | --- | --- | --- |
-| unplugged | Bayati | C · D𝄳 · E♭ · F · G · A♭ · B♭ | C |
-| `+` | Bayati with Rast on top | C · D𝄳 · E♭ · F · G · A𝄳 · B♭ | F |
-| `−` | Saba, roughly | C · D𝄳 · E♭ · F♭ · G · A♭ · B♭ | E♭ |
+| unplugged | Bayati | C · D½♭ · E♭ · F · G · A♭ · B♭ | C |
+| `+` | Bayati with Rast on top | C · D½♭ · E♭ · F · G · A½♭ · B♭ | F |
+| `−` | Saba, roughly | C · D½♭ · E♭ · F♭ · G · A♭ · B♭ | E♭ |
 
-𝄳 means half-flat: a quarter tone down. D𝄳 sits halfway between D♭ and D, and A𝄳 halfway
-between A♭ and A. That in-between note is the sound of Bayati.
+½♭ means half-flat: a quarter tone down. D half-flat sits halfway between D♭ and D, and A
+half-flat halfway between A♭ and A. That in-between note is the sound of Bayati.
 
 A bit more about each:
 
-- **Bayati** is home. The lower half of the scale, C D𝄳 E♭ F, carries the character, and the
+- **Bayati** is home. The lower half of the scale, C D½♭ E♭ F, carries the character, and the
   drone holds C.
 - **`+`** keeps Bayati's lower half but swaps the upper half for Rast, built on F, which raises
-  A♭ to A𝄳. The drone moves to F, the scale's pivot note, the way an oud player shifts the bass
-  when the melody moves up.
+  A♭ to A half-flat. The drone moves to F, the scale's pivot note, the way an oud player shifts
+  the bass when the melody moves up.
 - **`−`** is Saba, the most mournful of the three. The fourth note drops to F♭. Real Saba also
   flattens the fifth and changes from octave to octave. This version keeps the same seven notes
   in every octave so it stays playable across the whole knob, which makes it an approximation.
