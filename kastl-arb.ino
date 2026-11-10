@@ -143,12 +143,21 @@ uint8_t analogChannelSequence[6] = {0, 1, 0, 2, 0, 3};
 uint8_t analogChannelReadIndex;
 
 #define PITCHMAP_POINTS 5
-//7 notes per octave. keeps at least 3 ADC counts per note, or the 2 count ripple
-//filter in loop() skips notes on slow upward sweeps. last input is 255, not 250:
-//curveMap() returns its input unchanged for anything outside the table.
+//29 notes: 4 octaves of 7 plus the top C, so the knob ends on the tonic. spread evenly
+//over readings 0-210, about 7.2 per note, well above the 2 count ripple filter in loop().
+//measured on a Kastle SMT v1.7.1: the NOTE knob alone reads 0 from fully left to about
+//9 o'clock, then rises smoothly to 222 on 4.5 V batteries or 225 on USB. it never
+//reaches 255. ending at 210 keeps the top note reachable as the batteries run down.
+//readings above 210, which NOTE MOD can still produce, hold the top note: the table
+//runs to 29 and knobToWindow() clamps to 28. last input is 255: curveMap() returns its
+//input unchanged for anything outside the table.
+#define TOP_WINDOW 28
 const PROGMEM uint16_t pitchMap[10] = {
-  0, 30, 60, 120, 255,   0, 9, 18, 32, 51
+  0, 72, 145, 210, 255,   0, 10, 20, 29, 29
 };
+
+//the lowest note is one octave above the bass, C2 at transpose 0
+#define START_QT 24
 
 
 uint32_t curveMap(uint8_t value, uint8_t numberOfPoints, const uint16_t * tableMap) {
@@ -267,30 +276,39 @@ void setFrequency2(uint16_t input) {
 }
 
 
-//returns the note in quarter tones above the root
-uint8_t gridToNote(uint8_t _note) {
-  uint8_t _octave = _note / 7;
-  return pgm_read_byte_near(_scales + ((root >> 1) * 7) + (_note % 7)) + (_octave * 24);
+uint8_t knobToWindow(uint8_t value) {
+  uint8_t w = curveMap(value, PITCHMAP_POINTS, pitchMap);
+  return w > TOP_WINDOW ? TOP_WINDOW : w;
 }
 
+//returns the note in quarter tones above the root's C1
+uint8_t gridToNote(uint8_t _note) {
+  uint8_t _octave = _note / 7;
+  return START_QT + pgm_read_byte_near(_scales + ((root >> 1) * 7) + (_note % 7)) + (_octave * 24);
+}
+
+//the drone sits at C2 for root C, the same octave as the melody's lowest note
+//(stock had it an octave lower, at C1)
 void setBass() {
   uint8_t bass = pgm_read_byte_near(rootToPitch + root);
-  int semiSize = (pgm_read_word_near(dcoTable + bass + 1 + 12)) - (pgm_read_word_near(dcoTable + bass + 12));
+  int semiSize = (pgm_read_word_near(dcoTable + bass + 1 + 24)) - (pgm_read_word_near(dcoTable + bass + 24));
   int bassFine = map(fineTune, 0, 255, -semiSize, semiSize);
-  setFrequency2((pgm_read_word_near(dcoTable + bass + transpose + 12)) + bassFine);
+  setFrequency2((pgm_read_word_near(dcoTable + bass + transpose + 24)) + bassFine);
 }
 
 //_note is in quarter tones. even notes use the table directly, odd notes are the
-//midpoint of the two neighbouring semitones
+//midpoint of the two neighbouring semitones.
+//stock doubles dcoTable[n] for the main voice. dcoTable[n + 12] is the same pitch with
+//twice the resolution, which matters in the low octaves where entries are small.
 void setNote(uint8_t _note) {
-  uint8_t _semitone = _note >> 1;
-  int semiSize = (pgm_read_word_near(dcoTable + _semitone + 1) << 1) - (pgm_read_word_near(dcoTable + _semitone) << 1);
+  uint8_t index = (_note >> 1) + transpose;
+  while (index > 83) index -= 12; //keep index+13 inside dcoTable, an octave down keeps the note name
+  uint16_t base = pgm_read_word_near(dcoTable + index + 12);
+  uint16_t next = pgm_read_word_near(dcoTable + index + 13);
+  int semiSize = next - base;
   int fine = map(fineTune, 0, 255, -semiSize, semiSize);
-  uint8_t index = _semitone + transpose;
-  while (index > 95) index -= 12; //keep index+1 inside dcoTable, an octave down keeps the note name
-  uint16_t base = pgm_read_word_near(dcoTable + index);
-  if (_note & 1) setFrequency(base + pgm_read_word_near(dcoTable + index + 1) + fine);
-  else setFrequency((base << 1) + fine);
+  if (_note & 1) setFrequency(((base + next + 1) >> 1) + fine);
+  else setFrequency(base + fine);
   setBass();
 }
 
@@ -386,7 +404,7 @@ void loop() {
       fineTune = analogValues[WS_2];
       transpose = map( analogValues[WS_1], 0, 255, 0, 13);
       //pitch = quantizeNote(curveMap(pitchAverage, PITCHMAP_POINTS, pitchMap));
-       pitch= gridToNote(curveMap(pitchAverage, PITCHMAP_POINTS, pitchMap));
+       pitch= gridToNote(knobToWindow(pitchAverage));
       setNote( pitch);
     }
     else {
@@ -432,12 +450,12 @@ void loop() {
    
    //avoiding ripples =going down or a bigger step will be imediate, but going one step up requires overcoming 20% window
    lastWindow=window;
-   uint8_t newWindow= curveMap(pitchAverage, PITCHMAP_POINTS, pitchMap);
+   uint8_t newWindow= knobToWindow(pitchAverage);
    if(lastWindow>newWindow)  window=newWindow;
    else if(newWindow-lastWindow>1) window=newWindow;
    else{
    // if(newWindow==map(constrain(pitchAverage-3,0,255), 0,255,0,22)) window=newWindow;
-    if(newWindow==curveMap(constrain(pitchAverage-2,0,255), PITCHMAP_POINTS, pitchMap)) window=newWindow;
+    if(newWindow==knobToWindow(constrain(pitchAverage-2,0,255))) window=newWindow;
    }
    
     pitch= gridToNote(window);
